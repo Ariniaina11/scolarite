@@ -8,6 +8,7 @@ import classes.models.MatiereModel;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableColumnModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
@@ -36,11 +37,18 @@ public class MainWindow extends JFrame {
     private JButton rechercheButton;
     private JButton METTREAJOURButton;
     private JButton SUPPRIMERButton;
+    private JButton nouveauBtn;
+    private JButton modifierBtn;
+    private JButton supprimerBtn;
+    private JTextField rechercheEtdTxt;
+    private JButton rechercheEtdBtn;
     private JPanel countLbl;
 
     //
     static Etudiant ETUDIANT;
     static Matiere MATIERE;
+    static boolean EDIT_ETD; // Utilisé pour l'enregistrement d'un étudiant (Nouveau / Mise à jour)
+    static int CODE_ETD; // L'étudiant sélectionné
 
     public MainWindow() throws SQLException {
         init();
@@ -68,6 +76,38 @@ public class MainWindow extends JFrame {
                 }
             }
         });
+        nouveauBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                nouveauEtdAction();
+            }
+        });
+        modifierBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                modifierEtdAction();
+            }
+        });
+        supprimerBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    supprimerEtdAction();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        rechercheEtdBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    rechercheEtdAction();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
     }
 
     public static void main(String[] args) throws SQLException {
@@ -84,10 +124,11 @@ public class MainWindow extends JFrame {
         ETUDIANT = new Etudiant();
         MATIERE = new Matiere();
         //
-        get_etd_data();
+        get_etd_data(ETUDIANT.getAllStudents());
         get_mat_data();
         //
         get_etd_selection();
+        //
     }
 
     // Initialisation (Form)
@@ -97,6 +138,12 @@ public class MainWindow extends JFrame {
         adresseEtdTxt.setText("");
         telephoneEtdTxt.setText("");
         etudiantTbl.clearSelection();
+
+        enregistrerEtdBtn.setEnabled(false);
+        modifierBtn.setEnabled(false);
+        supprimerBtn.setEnabled(false);
+
+        EDIT_ETD = false;
     }
     private void init_mat_form() {
         codeMtTxt.setText("");
@@ -106,9 +153,7 @@ public class MainWindow extends JFrame {
     }
 
     // Ajouter les étudiants sur une table
-    private void get_etd_data() throws SQLException {
-        List<Etudiant> lists = ETUDIANT.getAllStudents();
-
+    private void get_etd_data(List<Etudiant> lists) throws SQLException {
         EtudiantModel model = new EtudiantModel(lists);
         etudiantTbl.setModel(model);
         etudiantTbl.setAutoCreateRowSorter(true);
@@ -142,9 +187,9 @@ public class MainWindow extends JFrame {
                 if (!e.getValueIsAdjusting()) {
                     int selectedRow = etudiantTbl.getSelectedRow();
                     if (selectedRow != -1) {
-                        int code = (int)etudiantTbl.getValueAt(selectedRow, 0);
+                        CODE_ETD = (int)etudiantTbl.getValueAt(selectedRow, 0);
                         try {
-                            Etudiant etd = ETUDIANT.getStudentByCode(code);
+                            Etudiant etd = ETUDIANT.getStudentByCode(CODE_ETD);
 
                             nomEtdTxt.setText(etd.getNom());
                             prenomEtdTxt.setText(etd.getPrenom());
@@ -153,6 +198,9 @@ public class MainWindow extends JFrame {
                         } catch (SQLException ex) {
                             ex.printStackTrace();
                         }
+
+                        modifierBtn.setEnabled(true);
+                        supprimerBtn.setEnabled(true);
                     }
                 }
             }
@@ -166,11 +214,18 @@ public class MainWindow extends JFrame {
         etd.setPrenom(prenomEtdTxt.getText());
         etd.setAdresse(adresseEtdTxt.getText());
         etd.setTelephone(telephoneEtdTxt.getText());
-        etd.store();
 
-        System.out.println("Etudiant ajouté avec succès !");
+        if(!EDIT_ETD){
+            etd.store();
+        }
+        else{
+            etd.setCode(CODE_ETD);
+            etd.update();
+        }
+
+        System.out.println("Etudiant enregistré avec succès !");
         init_etd_form();
-        get_etd_data();
+        get_etd_data(ETUDIANT.getAllStudents());
     }
 
     // Action sur l'enregistrement d'une matière
@@ -184,5 +239,41 @@ public class MainWindow extends JFrame {
         System.out.println("Matière ajoutée avec succès !");
         init_mat_form();
         get_mat_data();
+    }
+
+    // Action sur "nouveau" étudiant
+    private void nouveauEtdAction() {
+        etudiantTbl.clearSelection();
+        init_etd_form();
+        modifierBtn.setEnabled(false);
+        supprimerBtn.setEnabled(false);
+
+        EDIT_ETD = false;
+        enregistrerEtdBtn.setEnabled(true);
+        enregistrerEtdBtn.setText("AJOUTER");
+    }
+
+    // Action sur "modifier" étudiant
+    private void modifierEtdAction(){
+        EDIT_ETD = true;
+        enregistrerEtdBtn.setEnabled(true);
+        enregistrerEtdBtn.setText("METTRE A JOUR");
+    }
+
+    // Action sur "supprimer" étudiant
+    private void supprimerEtdAction() throws SQLException {
+        Etudiant etd = new Etudiant();
+        etd.setCode(CODE_ETD);
+        etd.destroy();
+
+        System.out.println("Etudiant supprimé avec succès :)");
+
+        init_etd_form();
+        get_etd_data(ETUDIANT.getAllStudents());
+    }
+
+    // Action sur la recheche d'un étudiant
+    private void rechercheEtdAction() throws SQLException {
+        get_etd_data(ETUDIANT.getCustomStudents(rechercheEtdTxt.getText()));
     }
 }

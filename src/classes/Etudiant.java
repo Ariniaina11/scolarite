@@ -55,6 +55,32 @@ public class Etudiant {
         return lists;
     }
 
+    public List<Etudiant> getCustomStudents(String pattern) throws SQLException {
+        List<Etudiant> lists = new ArrayList();
+        String query = "SELECT * FROM etudiant WHERE code LIKE '%" + pattern + "%' " +
+                            "OR nom LIKE '%" + pattern + "%' " +
+                            "OR prenom LIKE '%" + pattern + "%' " +
+                            "OR adresse LIKE '%" + pattern + "%' " +
+                            "OR telephone LIKE '%" + pattern + "%'";
+
+        System.out.println(query);
+
+        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        ResultSet resultSet = statement.executeQuery();
+
+        while(resultSet.next()) {
+            Etudiant etd = new Etudiant();
+            etd.setCode(resultSet.getInt("code"));
+            etd.setNom(resultSet.getString("nom"));
+            etd.setPrenom(resultSet.getString("prenom"));
+            etd.setAdresse(resultSet.getString("adresse"));
+            etd.setTelephone(resultSet.getString("telephone"));
+            lists.add(etd);
+        }
+
+        return lists;
+    }
+
     public void store() throws SQLException {
         String query = "INSERT INTO etudiant(nom, prenom, adresse, telephone) VALUES(?, ?, ?, ?)";
         PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
