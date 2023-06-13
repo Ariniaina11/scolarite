@@ -6,6 +6,8 @@ import classes.models.EtudiantModel;
 import classes.models.MatiereModel;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
@@ -81,8 +83,11 @@ public class MainWindow extends JFrame {
     private void init() throws SQLException {
         ETUDIANT = new Etudiant();
         MATIERE = new Matiere();
+        //
         get_etd_data();
         get_mat_data();
+        //
+        get_etd_selection();
     }
 
     // Initialisation (Form)
@@ -91,11 +96,13 @@ public class MainWindow extends JFrame {
         prenomEtdTxt.setText("");
         adresseEtdTxt.setText("");
         telephoneEtdTxt.setText("");
+        etudiantTbl.clearSelection();
     }
     private void init_mat_form() {
         codeMtTxt.setText("");
         designationMtTxt.setText("");
         volumeMtTxt.setText("");
+        matiereTbl.clearSelection();
     }
 
     // Ajouter les étudiants sur une table
@@ -105,6 +112,7 @@ public class MainWindow extends JFrame {
         EtudiantModel model = new EtudiantModel(lists);
         etudiantTbl.setModel(model);
         etudiantTbl.setAutoCreateRowSorter(true);
+        etudiantTbl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         countEtdLbl.setText(model.getRowCount() + " étudiant(s) enregistré(s)");
     }
@@ -116,12 +124,39 @@ public class MainWindow extends JFrame {
         MatiereModel model = new MatiereModel(lists);
         matiereTbl.setModel(model);
         matiereTbl.setAutoCreateRowSorter(true);
+        matiereTbl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         countMatLbl.setText(model.getRowCount() + " matière(s) enregistré(s)");
 
         //
         matiereTbl.getColumn("ACTION").setCellRenderer(new ButtonRenderer());
         matiereTbl.getColumn("ACTION").setCellEditor(new ButtonEditor("Luda"));
+    }
+
+    // Séléction du table
+    private void get_etd_selection() {
+        ListSelectionModel sM = etudiantTbl.getSelectionModel();
+        sM.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    int selectedRow = etudiantTbl.getSelectedRow();
+                    if (selectedRow != -1) {
+                        int code = (int)etudiantTbl.getValueAt(selectedRow, 0);
+                        try {
+                            Etudiant etd = ETUDIANT.getStudentByCode(code);
+
+                            nomEtdTxt.setText(etd.getNom());
+                            prenomEtdTxt.setText(etd.getPrenom());
+                            adresseEtdTxt.setText(etd.getAdresse());
+                            telephoneEtdTxt.setText(etd.getTelephone());
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
     }
 
     // Action sur l'enregistrement d'un étudiant
