@@ -4,11 +4,11 @@ import classes.components.ButtonEditor;
 import classes.components.ButtonRenderer;
 import classes.models.EtudiantModel;
 import classes.models.MatiereModel;
+import com.formdev.flatlaf.intellijthemes.FlatDarkPurpleIJTheme;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableColumnModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
@@ -42,6 +42,9 @@ public class MainWindow extends JFrame {
     private JButton supprimerBtn;
     private JTextField rechercheEtdTxt;
     private JButton rechercheEtdBtn;
+    private JTable table1;
+    private JTable table2;
+    private JButton ajouterUneNoteButton;
     private JPanel countLbl;
 
     //
@@ -111,6 +114,8 @@ public class MainWindow extends JFrame {
     }
 
     public static void main(String[] args) throws SQLException {
+        FlatDarkPurpleIJTheme.setup();
+
         MainWindow main = new MainWindow();
         main.setContentPane(main.rootPnl);
         main.setTitle("Scolarité");
@@ -275,5 +280,9 @@ public class MainWindow extends JFrame {
     // Action sur la recheche d'un étudiant
     private void rechercheEtdAction() throws SQLException {
         get_etd_data(ETUDIANT.getCustomStudents(rechercheEtdTxt.getText()));
+    }
+
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
     }
 }
