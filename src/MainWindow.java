@@ -4,7 +4,9 @@ import classes.components.ButtonEditor;
 import classes.components.ButtonRenderer;
 import classes.models.EtudiantModel;
 import classes.models.MatiereModel;
-import com.formdev.flatlaf.intellijthemes.FlatDarkPurpleIJTheme;
+import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme;
+import com.formdev.flatlaf.intellijthemes.FlatCobalt2IJTheme;
+import formes.AddStudent;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -29,7 +31,7 @@ public class MainWindow extends JFrame {
     private JPanel notePnl;
     private JTextField codeMtTxt;
     private JTextField designationMtTxt;
-    private JTextField volumeMtTxt;
+    private JSpinner volumeMtSp;
     private JTable matiereTbl;
     private JLabel countMatLbl;
     private JButton enregistrerMatBtn;
@@ -37,14 +39,16 @@ public class MainWindow extends JFrame {
     private JButton rechercheButton;
     private JButton METTREAJOURButton;
     private JButton SUPPRIMERButton;
-    private JButton nouveauBtn;
-    private JButton modifierBtn;
-    private JButton supprimerBtn;
+    private JButton nouveauEtdBtn;
+    private JButton modifierEtdBtn;
+    private JButton supprimerEtdBtn;
     private JTextField rechercheEtdTxt;
     private JButton rechercheEtdBtn;
     private JTable table1;
     private JTable table2;
     private JButton ajouterUneNoteButton;
+    private JButton openBtn;
+    private JButton editButton;
     private JPanel countLbl;
 
     //
@@ -52,46 +56,12 @@ public class MainWindow extends JFrame {
     static Matiere MATIERE;
     static boolean EDIT_ETD; // Utilisé pour l'enregistrement d'un étudiant (Nouveau / Mise à jour)
     static int CODE_ETD; // L'étudiant sélectionné
+    static MainWindow THIS;
 
     public MainWindow() throws SQLException {
         init();
 
-        // Clique sur "enregistrer" (Etudiant)
-        enregistrerEtdBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    enregistrerEtdAction();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-
-        // Clique sur "enregistrer" (Matière)
-        enregistrerMatBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    enregistrerMatAction();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        nouveauBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                nouveauEtdAction();
-            }
-        });
-        modifierBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                modifierEtdAction();
-            }
-        });
-        supprimerBtn.addActionListener(new ActionListener() {
+        supprimerEtdBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -111,10 +81,51 @@ public class MainWindow extends JFrame {
                 }
             }
         });
+
+        // Nouveau étudiant
+        nouveauEtdBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AddStudent nW = new AddStudent(THIS, false, null);
+                boolean rs = nW.showDialog();
+
+                if(rs){
+                    try {
+                        get_etd_data(ETUDIANT.getAllStudents());
+                        init_etd_form();
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        // Modifier un étudiant
+        modifierEtdBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Etudiant etd = ETUDIANT.getStudentByCode(CODE_ETD);
+                    AddStudent nW = new AddStudent(THIS, true, etd);
+                    boolean rs = nW.showDialog();
+
+                    if(rs){
+                        get_etd_data(ETUDIANT.getAllStudents());
+                        init_etd_form();
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
     }
 
     public static void main(String[] args) throws SQLException {
-        FlatDarkPurpleIJTheme.setup();
+        try {
+            UIManager.setLookAndFeel(new FlatCobalt2IJTheme());
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
 
         MainWindow main = new MainWindow();
         main.setContentPane(main.rootPnl);
@@ -126,6 +137,7 @@ public class MainWindow extends JFrame {
 
     // Initialisation
     private void init() throws SQLException {
+        THIS = this;
         ETUDIANT = new Etudiant();
         MATIERE = new Matiere();
         //
@@ -138,23 +150,12 @@ public class MainWindow extends JFrame {
 
     // Initialisation (Form)
     private void init_etd_form() {
-        nomEtdTxt.setText("");
-        prenomEtdTxt.setText("");
-        adresseEtdTxt.setText("");
-        telephoneEtdTxt.setText("");
         etudiantTbl.clearSelection();
 
-        enregistrerEtdBtn.setEnabled(false);
-        modifierBtn.setEnabled(false);
-        supprimerBtn.setEnabled(false);
+        modifierEtdBtn.setEnabled(false);
+        supprimerEtdBtn.setEnabled(false);
 
         EDIT_ETD = false;
-    }
-    private void init_mat_form() {
-        codeMtTxt.setText("");
-        designationMtTxt.setText("");
-        volumeMtTxt.setText("");
-        matiereTbl.clearSelection();
     }
 
     // Ajouter les étudiants sur une table
@@ -164,7 +165,7 @@ public class MainWindow extends JFrame {
         etudiantTbl.setAutoCreateRowSorter(true);
         etudiantTbl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        countEtdLbl.setText(model.getRowCount() + " étudiant(s) enregistré(s)");
+        countEtdLbl.setText(model.getRowCount() + " ETUDIANT(S)");
     }
 
     // Ajouter les matières sur une table
@@ -195,94 +196,41 @@ public class MainWindow extends JFrame {
                         CODE_ETD = (int)etudiantTbl.getValueAt(selectedRow, 0);
                         try {
                             Etudiant etd = ETUDIANT.getStudentByCode(CODE_ETD);
-
-                            nomEtdTxt.setText(etd.getNom());
-                            prenomEtdTxt.setText(etd.getPrenom());
-                            adresseEtdTxt.setText(etd.getAdresse());
-                            telephoneEtdTxt.setText(etd.getTelephone());
                         } catch (SQLException ex) {
                             ex.printStackTrace();
                         }
 
-                        modifierBtn.setEnabled(true);
-                        supprimerBtn.setEnabled(true);
+                        modifierEtdBtn.setEnabled(true);
+                        supprimerEtdBtn.setEnabled(true);
                     }
                 }
             }
         });
     }
 
-    // Action sur l'enregistrement d'un étudiant
-    private void enregistrerEtdAction() throws SQLException {
-        Etudiant etd = new Etudiant();
-        etd.setNom(nomEtdTxt.getText());
-        etd.setPrenom(prenomEtdTxt.getText());
-        etd.setAdresse(adresseEtdTxt.getText());
-        etd.setTelephone(telephoneEtdTxt.getText());
-
-        if(!EDIT_ETD){
-            etd.store();
-        }
-        else{
-            etd.setCode(CODE_ETD);
-            etd.update();
-        }
-
-        System.out.println("Etudiant enregistré avec succès !");
-        init_etd_form();
-        get_etd_data(ETUDIANT.getAllStudents());
-    }
-
-    // Action sur l'enregistrement d'une matière
-    private void enregistrerMatAction() throws SQLException {
-        Matiere mat = new Matiere();
-        mat.setCode(codeMtTxt.getText());
-        mat.setDesignation(designationMtTxt.getText());
-        mat.setVolume(Short.parseShort(volumeMtTxt.getText()));
-        mat.store();
-
-        System.out.println("Matière ajoutée avec succès !");
-        init_mat_form();
-        get_mat_data();
-    }
-
-    // Action sur "nouveau" étudiant
-    private void nouveauEtdAction() {
-        etudiantTbl.clearSelection();
-        init_etd_form();
-        modifierBtn.setEnabled(false);
-        supprimerBtn.setEnabled(false);
-
-        EDIT_ETD = false;
-        enregistrerEtdBtn.setEnabled(true);
-        enregistrerEtdBtn.setText("AJOUTER");
-    }
-
-    // Action sur "modifier" étudiant
-    private void modifierEtdAction(){
-        EDIT_ETD = true;
-        enregistrerEtdBtn.setEnabled(true);
-        enregistrerEtdBtn.setText("METTRE A JOUR");
-    }
-
     // Action sur "supprimer" étudiant
     private void supprimerEtdAction() throws SQLException {
         Etudiant etd = new Etudiant();
         etd.setCode(CODE_ETD);
-        etd.destroy();
+        int dialog = JOptionPane.showConfirmDialog(
+                THIS,
+                "Voulez-vous vraiment supprimer cet étudiant [code : " + CODE_ETD + "] ?",
+                "Suppréssion",
+                JOptionPane.YES_NO_OPTION
+        );
 
-        System.out.println("Etudiant supprimé avec succès :)");
+        if(dialog == 0){
+            etd.destroy();
 
-        init_etd_form();
-        get_etd_data(ETUDIANT.getAllStudents());
+            System.out.println("Etudiant supprimé avec succès :)");
+
+            init_etd_form();
+            get_etd_data(ETUDIANT.getAllStudents());
+        }
     }
 
     // Action sur la recheche d'un étudiant
     private void rechercheEtdAction() throws SQLException {
         get_etd_data(ETUDIANT.getCustomStudents(rechercheEtdTxt.getText()));
-    }
-
-    private void createUIComponents() {
-        // TODO: place custom component creation code here
     }
 }

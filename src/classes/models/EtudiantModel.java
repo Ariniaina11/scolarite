@@ -7,7 +7,7 @@ import java.util.List;
 
 public class EtudiantModel extends AbstractTableModel {
     // Les en-têtes
-    private String[] columns = {"ID", "NOM", "PRENOMS", "ADRESSE", "TELEPHONE"};
+    private String[] columns = {"CODE", "NOM", "PRENOMS", "ADRESSE", "TELEPHONE"};
     private List<Etudiant> etudiants;
 
     public EtudiantModel(List<Etudiant> etudiants){
