@@ -63,8 +63,6 @@ public class Etudiant {
                             "OR adresse LIKE '%" + pattern + "%' " +
                             "OR telephone LIKE '%" + pattern + "%'";
 
-        System.out.println(query);
-
         PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
         ResultSet resultSet = statement.executeQuery();
 

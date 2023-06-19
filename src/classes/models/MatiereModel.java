@@ -5,7 +5,7 @@ import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
 public class MatiereModel extends AbstractTableModel {
-    private String[] columns = {"CODE", "DESIGNATION", "VOLUME", "ACTION"};
+    private String[] columns = {"CODE", "DESIGNATION", "VOLUME"};
     private List<Matiere> matieres;
 
     public MatiereModel(List<Matiere> matieres){

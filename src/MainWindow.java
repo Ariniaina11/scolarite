@@ -1,11 +1,9 @@
 import classes.Etudiant;
 import classes.Matiere;
-import classes.components.ButtonEditor;
-import classes.components.ButtonRenderer;
 import classes.models.EtudiantModel;
 import classes.models.MatiereModel;
-import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme;
 import com.formdev.flatlaf.intellijthemes.FlatCobalt2IJTheme;
+import formes.AddCourse;
 import formes.AddStudent;
 
 import javax.swing.*;
@@ -29,16 +27,10 @@ public class MainWindow extends JFrame {
     private JLabel countEtdLbl;
     private JPanel matierePnl;
     private JPanel notePnl;
-    private JTextField codeMtTxt;
-    private JTextField designationMtTxt;
-    private JSpinner volumeMtSp;
     private JTable matiereTbl;
     private JLabel countMatLbl;
-    private JButton enregistrerMatBtn;
     private JTextField textField1;
     private JButton rechercheButton;
-    private JButton METTREAJOURButton;
-    private JButton SUPPRIMERButton;
     private JButton nouveauEtdBtn;
     private JButton modifierEtdBtn;
     private JButton supprimerEtdBtn;
@@ -47,6 +39,9 @@ public class MainWindow extends JFrame {
     private JTable table1;
     private JTable table2;
     private JButton ajouterUneNoteButton;
+    private JButton nouvelleMatBtn;
+    private JButton modifierMatBtn;
+    private JButton supprimerMatBtn;
     private JButton openBtn;
     private JButton editButton;
     private JPanel countLbl;
@@ -54,8 +49,8 @@ public class MainWindow extends JFrame {
     //
     static Etudiant ETUDIANT;
     static Matiere MATIERE;
-    static boolean EDIT_ETD; // Utilisé pour l'enregistrement d'un étudiant (Nouveau / Mise à jour)
     static int CODE_ETD; // L'étudiant sélectionné
+    static String CODE_MAT; // Matière sélectionée
     static MainWindow THIS;
 
     public MainWindow() throws SQLException {
@@ -86,16 +81,10 @@ public class MainWindow extends JFrame {
         nouveauEtdBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                AddStudent nW = new AddStudent(THIS, false, null);
-                boolean rs = nW.showDialog();
-
-                if(rs){
-                    try {
-                        get_etd_data(ETUDIANT.getAllStudents());
-                        init_etd_form();
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                    }
+                try {
+                    newStudentAction();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
             }
         });
@@ -105,20 +94,44 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    Etudiant etd = ETUDIANT.getStudentByCode(CODE_ETD);
-                    AddStudent nW = new AddStudent(THIS, true, etd);
-                    boolean rs = nW.showDialog();
-
-                    if(rs){
-                        get_etd_data(ETUDIANT.getAllStudents());
-                        init_etd_form();
-                    }
+                    editStudentAction();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
             }
         });
+        nouvelleMatBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    newCourseAction();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        modifierMatBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    editCourseAction();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        supprimerMatBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    DeleteCourseAction();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
     }
+
 
     public static void main(String[] args) throws SQLException {
         try {
@@ -142,9 +155,10 @@ public class MainWindow extends JFrame {
         MATIERE = new Matiere();
         //
         get_etd_data(ETUDIANT.getAllStudents());
-        get_mat_data();
+        get_mat_data(MATIERE.getAllCourses());
         //
         get_etd_selection();
+        get_mat_selection();
         //
     }
 
@@ -154,8 +168,13 @@ public class MainWindow extends JFrame {
 
         modifierEtdBtn.setEnabled(false);
         supprimerEtdBtn.setEnabled(false);
+    }
 
-        EDIT_ETD = false;
+    private void init_mat_form() {
+        matiereTbl.clearSelection();
+
+        modifierMatBtn.setEnabled(false);
+        supprimerMatBtn.setEnabled(false);
     }
 
     // Ajouter les étudiants sur une table
@@ -169,22 +188,16 @@ public class MainWindow extends JFrame {
     }
 
     // Ajouter les matières sur une table
-    private void get_mat_data() throws SQLException {
-        List<Matiere> lists = MATIERE.getAllCourses();
-
+    private void get_mat_data(List<Matiere> lists) throws SQLException {
         MatiereModel model = new MatiereModel(lists);
         matiereTbl.setModel(model);
         matiereTbl.setAutoCreateRowSorter(true);
         matiereTbl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        countMatLbl.setText(model.getRowCount() + " matière(s) enregistré(s)");
-
-        //
-        matiereTbl.getColumn("ACTION").setCellRenderer(new ButtonRenderer());
-        matiereTbl.getColumn("ACTION").setCellEditor(new ButtonEditor("Luda"));
+        countMatLbl.setText(model.getRowCount() + " MATIERE(S)");
     }
 
-    // Séléction du table
+    // Séléction du table étudiant
     private void get_etd_selection() {
         ListSelectionModel sM = etudiantTbl.getSelectionModel();
         sM.addListSelectionListener(new ListSelectionListener() {
@@ -194,11 +207,6 @@ public class MainWindow extends JFrame {
                     int selectedRow = etudiantTbl.getSelectedRow();
                     if (selectedRow != -1) {
                         CODE_ETD = (int)etudiantTbl.getValueAt(selectedRow, 0);
-                        try {
-                            Etudiant etd = ETUDIANT.getStudentByCode(CODE_ETD);
-                        } catch (SQLException ex) {
-                            ex.printStackTrace();
-                        }
 
                         modifierEtdBtn.setEnabled(true);
                         supprimerEtdBtn.setEnabled(true);
@@ -206,6 +214,45 @@ public class MainWindow extends JFrame {
                 }
             }
         });
+    }
+
+    // Séléction du table matière
+    private void get_mat_selection() {
+        ListSelectionModel sM = matiereTbl.getSelectionModel();
+        sM.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    int selectedRow = matiereTbl.getSelectedRow();
+                    if (selectedRow != -1) {
+                        CODE_MAT = matiereTbl.getValueAt(selectedRow, 0).toString();
+
+                        modifierMatBtn.setEnabled(true);
+                        supprimerMatBtn.setEnabled(true);
+                    }
+                }
+            }
+        });
+    }
+
+    private void newStudentAction() throws SQLException {
+        AddStudent nW = new AddStudent(THIS, false, null);
+        boolean rs = nW.showDialog();
+
+        if(rs){
+            get_etd_data(ETUDIANT.getAllStudents());
+        }
+    }
+
+    private void editStudentAction() throws SQLException {
+        Etudiant etd = ETUDIANT.getStudentByCode(CODE_ETD);
+        AddStudent nW = new AddStudent(THIS, true, etd);
+        boolean rs = nW.showDialog();
+
+        if(rs){
+            get_etd_data(ETUDIANT.getAllStudents());
+            init_etd_form();
+        }
     }
 
     // Action sur "supprimer" étudiant
@@ -226,6 +273,47 @@ public class MainWindow extends JFrame {
 
             init_etd_form();
             get_etd_data(ETUDIANT.getAllStudents());
+        }
+    }
+
+    // Action pour une nouvelle cours
+    private void newCourseAction() throws SQLException {
+        AddCourse aC = new AddCourse(THIS, false, null);
+        boolean rs = aC.showDialog();
+
+        if(rs){
+            get_mat_data(MATIERE.getAllCourses());
+        }
+    }
+
+    private void editCourseAction() throws SQLException {
+        Matiere mat = MATIERE.getCourseByCode(CODE_MAT);
+        System.out.println(mat.getCode());
+        AddCourse aC = new AddCourse(THIS, true, mat);
+        boolean rs = aC.showDialog();
+
+        if(rs){
+            get_mat_data(MATIERE.getAllCourses());
+        }
+    }
+
+    private void DeleteCourseAction() throws SQLException {
+        Matiere mat = new Matiere();
+        mat.setCode(CODE_MAT);
+        int dialog = JOptionPane.showConfirmDialog(
+                THIS,
+                "Voulez-vous vraiment supprimer cette matière [code : " + CODE_MAT + "] ?",
+                "Suppréssion",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if(dialog == 0){
+            mat.destroy();
+
+            System.out.println("Cours supprimé avec succès :)");
+
+            init_mat_form();
+            get_mat_data(MATIERE.getAllCourses());
         }
     }
 
