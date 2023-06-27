@@ -1,9 +1,12 @@
 import classes.Etudiant;
 import classes.Matiere;
+import classes.Note;
 import classes.models.EtudiantModel;
 import classes.models.MatiereModel;
+import classes.models.NoteModel;
 import com.formdev.flatlaf.intellijthemes.FlatCobalt2IJTheme;
 import formes.AddCourse;
+import formes.AddNote;
 import formes.AddStudent;
 
 import javax.swing.*;
@@ -29,19 +32,24 @@ public class MainWindow extends JFrame {
     private JPanel notePnl;
     private JTable matiereTbl;
     private JLabel countMatLbl;
-    private JTextField textField1;
-    private JButton rechercheButton;
+    private JTextField rechercheMatTxt;
+    private JButton rechercheMatBtn;
     private JButton nouveauEtdBtn;
     private JButton modifierEtdBtn;
     private JButton supprimerEtdBtn;
     private JTextField rechercheEtdTxt;
     private JButton rechercheEtdBtn;
-    private JTable table1;
-    private JTable table2;
-    private JButton ajouterUneNoteButton;
+    private JTable etudiantNtTbl;
+    private JTable noteTbl;
+    private JButton ajouterBtn;
     private JButton nouvelleMatBtn;
     private JButton modifierMatBtn;
     private JButton supprimerMatBtn;
+    private JTextField rechercheNtTxt;
+    private JButton rechercheNtBtn;
+    private JLabel avgLbl;
+    private JLabel titleNtLbl;
+    private JPanel averageLbl;
     private JButton openBtn;
     private JButton editButton;
     private JPanel countLbl;
@@ -49,7 +57,8 @@ public class MainWindow extends JFrame {
     //
     static Etudiant ETUDIANT;
     static Matiere MATIERE;
-    static int CODE_ETD; // L'étudiant sélectionné
+    static Note NOTE;
+    static int CODE_ETD, CODE_ETD_NT; // L'étudiant sélectionné
     static String CODE_MAT; // Matière sélectionée
     static MainWindow THIS;
 
@@ -60,7 +69,7 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    supprimerEtdAction();
+                    deleteStudentAction();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
@@ -124,9 +133,29 @@ public class MainWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    DeleteCourseAction();
+                    deleteCourseAction();
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
+                }
+            }
+        });
+        rechercheMatBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    rechercheMatAction();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        ajouterBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    addNoteAction();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
             }
         });
@@ -153,28 +182,35 @@ public class MainWindow extends JFrame {
         THIS = this;
         ETUDIANT = new Etudiant();
         MATIERE = new Matiere();
+        NOTE = new Note();
         //
         get_etd_data(ETUDIANT.getAllStudents());
         get_mat_data(MATIERE.getAllCourses());
+        get_etdNt_data(ETUDIANT.getAllStudents());
         //
         get_etd_selection();
         get_mat_selection();
+        get_etdNt_selection();
         //
     }
 
     // Initialisation (Form)
-    private void init_etd_form() {
+    private void init_etd() {
         etudiantTbl.clearSelection();
 
         modifierEtdBtn.setEnabled(false);
         supprimerEtdBtn.setEnabled(false);
     }
 
-    private void init_mat_form() {
+    private void init_mat() {
         matiereTbl.clearSelection();
 
         modifierMatBtn.setEnabled(false);
         supprimerMatBtn.setEnabled(false);
+    }
+
+    private void init_etdNt(){
+        ajouterBtn.setEnabled(false);
     }
 
     // Ajouter les étudiants sur une table
@@ -195,6 +231,25 @@ public class MainWindow extends JFrame {
         matiereTbl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         countMatLbl.setText(model.getRowCount() + " MATIERE(S)");
+    }
+
+    // Ajouter les étudiants (note) sur une table
+    private void get_etdNt_data(List<Etudiant> lists) throws SQLException {
+        EtudiantModel model = new EtudiantModel(lists);
+        etudiantNtTbl.setModel(model);
+        etudiantTbl.setAutoCreateRowSorter(true);
+        etudiantNtTbl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    }
+
+    // Ajouter les notes d'un étudiant sur la table
+    private void get_note_data(List<Note> lists) throws SQLException {
+        NoteModel model = new NoteModel(lists);
+        noteTbl.setModel(model);
+        noteTbl.setAutoCreateRowSorter(true);
+        noteTbl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        titleNtLbl.setText(("NOTES DE " + NOTE.getEtudiant().getNom() + " " + NOTE.getEtudiant().getPrenom()).toUpperCase());
+        avgLbl.setText("MOYENNE : " + NOTE.getStudentAverage());
     }
 
     // Séléction du table étudiant
@@ -235,12 +290,44 @@ public class MainWindow extends JFrame {
         });
     }
 
+    private void get_etdNt_selection() {
+        ListSelectionModel sM = etudiantNtTbl.getSelectionModel();
+        sM.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    int selectedRow = etudiantNtTbl.getSelectedRow();
+                    if (selectedRow != -1) {
+                        noteTbl.clearSelection();
+                        CODE_ETD_NT = (int)etudiantNtTbl.getValueAt(selectedRow, 0);
+
+                        try {
+                            Etudiant etd = ETUDIANT.getStudentByCode(CODE_ETD_NT);
+                            Note nt = new Note();
+                            nt.setEtudiant(etd);
+
+                            NOTE = nt;
+                            get_note_data(nt.getStudentNote());
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+
+                        ajouterBtn.setEnabled(true);
+                    }
+                }
+            }
+        });
+    }
+
     private void newStudentAction() throws SQLException {
         AddStudent nW = new AddStudent(THIS, false, null);
         boolean rs = nW.showDialog();
 
         if(rs){
+            init_etd();
+            init_etdNt();
             get_etd_data(ETUDIANT.getAllStudents());
+            get_etdNt_data(ETUDIANT.getAllStudents());
         }
     }
 
@@ -250,13 +337,15 @@ public class MainWindow extends JFrame {
         boolean rs = nW.showDialog();
 
         if(rs){
+            init_etd();
+            init_etdNt();
             get_etd_data(ETUDIANT.getAllStudents());
-            init_etd_form();
+            get_etdNt_data(ETUDIANT.getAllStudents());
         }
     }
 
     // Action sur "supprimer" étudiant
-    private void supprimerEtdAction() throws SQLException {
+    private void deleteStudentAction() throws SQLException {
         Etudiant etd = new Etudiant();
         etd.setCode(CODE_ETD);
         int dialog = JOptionPane.showConfirmDialog(
@@ -271,8 +360,10 @@ public class MainWindow extends JFrame {
 
             System.out.println("Etudiant supprimé avec succès :)");
 
-            init_etd_form();
+            init_etd();
+            init_etdNt();
             get_etd_data(ETUDIANT.getAllStudents());
+            get_etdNt_data(ETUDIANT.getAllStudents());
         }
     }
 
@@ -282,6 +373,7 @@ public class MainWindow extends JFrame {
         boolean rs = aC.showDialog();
 
         if(rs){
+            init_mat();
             get_mat_data(MATIERE.getAllCourses());
         }
     }
@@ -293,11 +385,12 @@ public class MainWindow extends JFrame {
         boolean rs = aC.showDialog();
 
         if(rs){
+            init_mat();
             get_mat_data(MATIERE.getAllCourses());
         }
     }
 
-    private void DeleteCourseAction() throws SQLException {
+    private void deleteCourseAction() throws SQLException {
         Matiere mat = new Matiere();
         mat.setCode(CODE_MAT);
         int dialog = JOptionPane.showConfirmDialog(
@@ -312,13 +405,35 @@ public class MainWindow extends JFrame {
 
             System.out.println("Cours supprimé avec succès :)");
 
-            init_mat_form();
+            init_mat();
             get_mat_data(MATIERE.getAllCourses());
+        }
+    }
+
+    private void addNoteAction() throws SQLException {
+        Etudiant etd = ETUDIANT.getStudentByCode(CODE_ETD_NT);
+
+        AddNote aN = new AddNote(THIS, etd);
+        boolean rs = aN.showDialog();
+
+        if(rs){
+            init_etdNt();
+            get_etdNt_data(ETUDIANT.getAllStudents());
+
+            //
+
+            Note nt = new Note();
+            nt.setEtudiant(etd);
+            get_note_data(nt.getStudentNote());
         }
     }
 
     // Action sur la recheche d'un étudiant
     private void rechercheEtdAction() throws SQLException {
         get_etd_data(ETUDIANT.getCustomStudents(rechercheEtdTxt.getText()));
+    }
+
+    private void rechercheMatAction() throws SQLException {
+        get_mat_data(MATIERE.getCustomCourses(rechercheMatTxt.getText()));
     }
 }

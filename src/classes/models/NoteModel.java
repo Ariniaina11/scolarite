@@ -1,22 +1,22 @@
 package classes.models;
 
-import classes.Etudiant;
+import classes.Matiere;
+import classes.Note;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
-public class EtudiantModel extends AbstractTableModel {
-    // Les en-têtes
-    private String[] columns = {"CODE", "NOM", "PRENOMS", "ADRESSE", "TELEPHONE"};
-    private List<Etudiant> etudiants;
+public class NoteModel extends AbstractTableModel {
+    private String[] columns = {"MATIERE", "NOTE", "REF"};
+    private List<Note> notes;
 
-    public EtudiantModel(List<Etudiant> etudiants){
-        this.etudiants = etudiants;
+    public NoteModel(List<Note> notes){
+        this.notes = notes;
     }
 
     @Override
     public int getRowCount() {
-        return etudiants.size();
+        return notes.size();
     }
 
     @Override
@@ -27,11 +27,9 @@ public class EtudiantModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         return switch (columnIndex){
-            case 0 -> etudiants.get(rowIndex).getCode();
-            case 1 -> etudiants.get(rowIndex).getNom();
-            case 2 -> etudiants.get(rowIndex).getPrenom();
-            case 3 -> etudiants.get(rowIndex).getAdresse();
-            case 4 -> etudiants.get(rowIndex).getTelephone();
+            case 0 -> notes.get(rowIndex).getMatiere().getDesignation();
+            case 1 -> notes.get(rowIndex).getValeur();
+            case 2 -> notes.get(rowIndex).getId();
             default -> "-";
         };
     }
@@ -49,8 +47,7 @@ public class EtudiantModel extends AbstractTableModel {
             }else{
                 return Object.class;
             }
-        }
-        else{
+        }else{
             return Object.class;
         }
     }

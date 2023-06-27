@@ -39,8 +39,12 @@ public class MatiereModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        if(getValueAt(0, columnIndex) != null){
-            return getValueAt(0, columnIndex).getClass();
+        if(getRowCount() > 0){
+            if(getValueAt(0, columnIndex) != null){
+                return getValueAt(0, columnIndex).getClass();
+            }else{
+                return Object.class;
+            }
         }else{
             return Object.class;
         }
