@@ -12,17 +12,19 @@ public class Etudiant {
     private String Prenom;
     private String Adresse;
     private String Telephone;
-    private Database DB;
 
-    public Etudiant() throws SQLException {
+    public Etudiant() {
         this.Code = 0;
-        this.DB = new Database();
+        this.Nom = "-";
+        this.Prenom = "-";
+        this.Adresse = "-";
+        this.Telephone = "-";
     }
 
     public Etudiant getStudentByCode(int code) throws SQLException {
         Etudiant etd = new Etudiant();
         String query = "SELECT * FROM etudiant WHERE code = ?";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setInt(1, code);
         ResultSet resultSet = statement.executeQuery();
         if (resultSet.next()) {
@@ -39,7 +41,7 @@ public class Etudiant {
     public List<Etudiant> getAllStudents() throws SQLException {
         List<Etudiant> lists = new ArrayList();
         String query = "SELECT * FROM etudiant";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         ResultSet resultSet = statement.executeQuery();
 
         while(resultSet.next()) {
@@ -55,7 +57,7 @@ public class Etudiant {
         return lists;
     }
 
-    public List<Etudiant> getCustomStudents(String pattern) throws SQLException {
+    public List<Etudiant> getCustomStudents(String pattern, List<Etudiant> data) throws SQLException {
         List<Etudiant> lists = new ArrayList();
         String query = "SELECT * FROM etudiant WHERE code LIKE '%" + pattern + "%' " +
                             "OR nom LIKE '%" + pattern + "%' " +
@@ -63,7 +65,7 @@ public class Etudiant {
                             "OR adresse LIKE '%" + pattern + "%' " +
                             "OR telephone LIKE '%" + pattern + "%'";
 
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         ResultSet resultSet = statement.executeQuery();
 
         while(resultSet.next()) {
@@ -75,13 +77,29 @@ public class Etudiant {
             etd.setTelephone(resultSet.getString("telephone"));
             lists.add(etd);
         }
+        /*
+        List<Etudiant> lists = new ArrayList();
+
+        for (Etudiant etd : data) {
+            if(
+                    etd.getNom().toLowerCase().contains(pattern.toLowerCase()) ||
+                    etd.getPrenom().toLowerCase().contains(pattern.toLowerCase()) ||
+                    etd.getTelephone().toLowerCase().contains(pattern.toLowerCase()) ||
+                    etd.getAdresse().toLowerCase().contains(pattern.toLowerCase()) ||
+                    String.valueOf(etd.getCode()).toLowerCase().contains(pattern.toLowerCase())
+            ){
+                lists.add(etd);
+            }
+        }
+
+         */
 
         return lists;
     }
 
     public void store() throws SQLException {
         String query = "INSERT INTO etudiant(nom, prenom, adresse, telephone) VALUES(?, ?, ?, ?)";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setString(1, this.Nom);
         statement.setString(2, this.Prenom);
         statement.setString(3, this.Adresse);
@@ -91,7 +109,7 @@ public class Etudiant {
 
     public void update() throws SQLException {
         String query = "UPDATE etudiant SET nom = ?, prenom = ?, adresse = ?, telephone = ? WHERE code = ?";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setString(1, this.Nom);
         statement.setString(2, this.Prenom);
         statement.setString(3, this.Adresse);
@@ -102,7 +120,7 @@ public class Etudiant {
 
     public void destroy() throws SQLException {
         String query = "DELETE FROM etudiant WHERE code = ?";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setInt(1, this.Code);
         statement.executeUpdate();
     }

@@ -11,16 +11,18 @@ public class Note {
     private Matiere Matiere;
     private Etudiant Etudiant;
     private float Valeur;
-    private Database DB;
 
-    public Note() throws SQLException {
-        this.DB = new Database();
+    public Note() {
+        this.Id = 0;
+        this.Matiere = new Matiere();
+        this.Etudiant = new Etudiant();
+        this.Valeur = 0;
     }
 
     public List<Note> getStudentNote() throws SQLException {
         List<Note> lists = new ArrayList<>();
         String query = "SELECT * FROM note WHERE code_etudiant = ?";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setInt(1, this.Etudiant.getCode());
 
         ResultSet resultSet = statement.executeQuery();
@@ -43,7 +45,7 @@ public class Note {
     public float getStudentAverage() throws SQLException {
         float moyenne = 0;
         String query = "SELECT avg(valeur) AS moyenne FROM note WHERE code_etudiant = ?";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setInt(1, this.Etudiant.getCode());
 
         ResultSet resultSet = statement.executeQuery();
@@ -56,7 +58,7 @@ public class Note {
 
     public void store() throws SQLException {
         String query = "INSERT INTO note(code_matiere, code_etudiant, valeur) VALUES(?, ?, ?)";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setString(1, this.Matiere.getCode());
         statement.setInt(2, this.Etudiant.getCode());
         statement.setFloat(3, this.Valeur);

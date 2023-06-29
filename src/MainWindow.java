@@ -1,3 +1,4 @@
+import classes.Database;
 import classes.Etudiant;
 import classes.Matiere;
 import classes.Note;
@@ -15,7 +16,9 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class MainWindow extends JFrame {
     private JPanel rootPnl;
@@ -61,6 +64,8 @@ public class MainWindow extends JFrame {
     static int CODE_ETD, CODE_ETD_NT; // L'étudiant sélectionné
     static String CODE_MAT; // Matière sélectionée
     static MainWindow THIS;
+    static Database DATABASE;
+
 
     public MainWindow() throws SQLException {
         init();
@@ -159,6 +164,16 @@ public class MainWindow extends JFrame {
                 }
             }
         });
+        rechercheNtBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    rechercheEtdNtAction();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
     }
 
 
@@ -179,6 +194,8 @@ public class MainWindow extends JFrame {
 
     // Initialisation
     private void init() throws SQLException {
+        DATABASE = new Database();
+        //
         THIS = this;
         ETUDIANT = new Etudiant();
         MATIERE = new Matiere();
@@ -358,8 +375,6 @@ public class MainWindow extends JFrame {
         if(dialog == 0){
             etd.destroy();
 
-            System.out.println("Etudiant supprimé avec succès :)");
-
             init_etd();
             init_etdNt();
             get_etd_data(ETUDIANT.getAllStudents());
@@ -403,8 +418,6 @@ public class MainWindow extends JFrame {
         if(dialog == 0){
             mat.destroy();
 
-            System.out.println("Cours supprimé avec succès :)");
-
             init_mat();
             get_mat_data(MATIERE.getAllCourses());
         }
@@ -430,10 +443,14 @@ public class MainWindow extends JFrame {
 
     // Action sur la recheche d'un étudiant
     private void rechercheEtdAction() throws SQLException {
-        get_etd_data(ETUDIANT.getCustomStudents(rechercheEtdTxt.getText()));
+        get_etd_data(ETUDIANT.getCustomStudents(rechercheEtdTxt.getText(), ETUDIANT.getAllStudents()));
     }
 
     private void rechercheMatAction() throws SQLException {
         get_mat_data(MATIERE.getCustomCourses(rechercheMatTxt.getText()));
+    }
+
+    private void rechercheEtdNtAction() throws SQLException {
+        get_etdNt_data(ETUDIANT.getCustomStudents(rechercheNtTxt.getText(), ETUDIANT.getAllStudents()));
     }
 }

@@ -5,21 +5,21 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Database {
-    private Connection Connection;
+    private static Connection Connection;
 
     public Database() throws SQLException {
         this.connexion();
     }
 
-    void connexion() throws SQLException {
+    public void connexion() throws SQLException {
         String url = "jdbc:mysql://localhost:3306/dbscolarite";
         String user = "root";
         String password = "";
         this.Connection = DriverManager.getConnection(url, user, password);
     }
 
-    public Connection getConnection() {
-        return this.Connection;
+    public static Connection getConnection() {
+        return Connection;
     }
 
     public void setConnection(Connection connection) {

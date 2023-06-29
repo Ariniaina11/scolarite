@@ -10,17 +10,18 @@ public class Matiere {
     private String Code;
     private String Designation;
     private short Volume;
-    private Database DB;
 
-    public Matiere() throws SQLException {
-        this.DB = new Database();
+    public Matiere() {
+        this.Code = "-";
+        this.Designation = "-";
+        this.Volume = 0;
     }
 
     // Prendre toutes les matières
     public List<Matiere> getAllCourses() throws SQLException {
         List<Matiere> lists = new ArrayList();
         String query = "SELECT * FROM matiere ORDER BY orderClm";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         ResultSet resultSet = statement.executeQuery();
 
         while(resultSet.next()) {
@@ -40,7 +41,7 @@ public class Matiere {
                 "OR designation LIKE '%" + pattern + "%' " +
                 "OR volume LIKE '%" + pattern + "%' ORDER BY orderClm";
 
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         ResultSet resultSet = statement.executeQuery();
 
         while(resultSet.next()) {
@@ -52,13 +53,31 @@ public class Matiere {
         }
 
         return lists;
+
+
+        /*
+        List<Matiere> lists = new ArrayList();
+
+        for (Matiere mat : Alldata) {
+            if(
+                    String.valueOf(mat.getCode()).contains(pattern) ||
+                    mat.getDesignation().toLowerCase().contains(pattern.toLowerCase()) ||
+                    String.valueOf(mat.getVolume()).contains(pattern)
+            ){
+                lists.add(mat);
+            }
+        }
+
+        return lists;
+
+         */
     }
 
     // Prendre une matière par son code
     public Matiere getCourseByCode(String code) throws SQLException {
         Matiere mat = new Matiere();
         String query = "SELECT * FROM matiere WHERE code = ?";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setString(1, code);
         ResultSet resultSet = statement.executeQuery();
         if (resultSet.next()) {
@@ -72,7 +91,7 @@ public class Matiere {
 
     public void store() throws SQLException {
         String query = "INSERT INTO matiere(code, designation, volume) VALUES(?, ?, ?)";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setString(1, this.Code);
         statement.setString(2, this.Designation);
         statement.setInt(3, this.Volume);
@@ -81,7 +100,7 @@ public class Matiere {
 
     public void update(String OldCode) throws SQLException {
         String query = "UPDATE matiere SET code = ?, designation = ?, volume = ? WHERE code = ?";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setString(1, this.Code);
         statement.setString(2, this.Designation);
         statement.setShort(3, this.Volume);
@@ -91,7 +110,7 @@ public class Matiere {
 
     public void destroy() throws SQLException {
         String query = "DELETE FROM matiere WHERE code = ?";
-        PreparedStatement statement = this.DB.getConnection().prepareStatement(query);
+        PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setString(1, this.Code);
         statement.executeUpdate();
     }
