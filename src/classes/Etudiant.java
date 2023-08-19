@@ -21,6 +21,7 @@ public class Etudiant {
         this.Telephone = "-";
     }
 
+    // Prendre un étudiant sachant son code
     public Etudiant getStudentByCode(int code) throws SQLException {
         Etudiant etd = new Etudiant();
         String query = "SELECT * FROM etudiant WHERE code = ?";
@@ -38,6 +39,7 @@ public class Etudiant {
         return etd;
     }
 
+    // Prendre tous les étudiants
     public List<Etudiant> getAllStudents() throws SQLException {
         List<Etudiant> lists = new ArrayList();
         String query = "SELECT * FROM etudiant";
@@ -57,6 +59,7 @@ public class Etudiant {
         return lists;
     }
 
+    // Prendre un étudiant personnalisé
     public List<Etudiant> getCustomStudents(String pattern, List<Etudiant> data) throws SQLException {
         List<Etudiant> lists = new ArrayList();
         String query = "SELECT * FROM etudiant WHERE code LIKE '%" + pattern + "%' " +
@@ -77,26 +80,11 @@ public class Etudiant {
             etd.setTelephone(resultSet.getString("telephone"));
             lists.add(etd);
         }
-        /*
-        List<Etudiant> lists = new ArrayList();
-
-        for (Etudiant etd : data) {
-            if(
-                    etd.getNom().toLowerCase().contains(pattern.toLowerCase()) ||
-                    etd.getPrenom().toLowerCase().contains(pattern.toLowerCase()) ||
-                    etd.getTelephone().toLowerCase().contains(pattern.toLowerCase()) ||
-                    etd.getAdresse().toLowerCase().contains(pattern.toLowerCase()) ||
-                    String.valueOf(etd.getCode()).toLowerCase().contains(pattern.toLowerCase())
-            ){
-                lists.add(etd);
-            }
-        }
-
-         */
 
         return lists;
     }
 
+    // Enregistrer un étudiant
     public void store() throws SQLException {
         String query = "INSERT INTO etudiant(nom, prenom, adresse, telephone) VALUES(?, ?, ?, ?)";
         PreparedStatement statement = Database.getConnection().prepareStatement(query);
@@ -107,6 +95,7 @@ public class Etudiant {
         statement.executeUpdate();
     }
 
+    // Metter à jour un étudiant
     public void update() throws SQLException {
         String query = "UPDATE etudiant SET nom = ?, prenom = ?, adresse = ?, telephone = ? WHERE code = ?";
         PreparedStatement statement = Database.getConnection().prepareStatement(query);
@@ -118,12 +107,15 @@ public class Etudiant {
         statement.executeUpdate();
     }
 
+    // Supprimer un étudiant
     public void destroy() throws SQLException {
         String query = "DELETE FROM etudiant WHERE code = ?";
         PreparedStatement statement = Database.getConnection().prepareStatement(query);
         statement.setInt(1, this.Code);
         statement.executeUpdate();
     }
+
+    // ================ GETTES & SETTERS ================ //
 
     public int getCode() {
         return this.Code;

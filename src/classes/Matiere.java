@@ -35,6 +35,7 @@ public class Matiere {
         return lists;
     }
 
+    // Prendre un matière personnalisé
     public List<Matiere> getCustomCourses(String pattern) throws SQLException {
         List<Matiere> lists = new ArrayList();
         String query = "SELECT * FROM matiere WHERE code LIKE '%" + pattern + "%' " +
@@ -53,27 +54,9 @@ public class Matiere {
         }
 
         return lists;
-
-
-        /*
-        List<Matiere> lists = new ArrayList();
-
-        for (Matiere mat : Alldata) {
-            if(
-                    String.valueOf(mat.getCode()).contains(pattern) ||
-                    mat.getDesignation().toLowerCase().contains(pattern.toLowerCase()) ||
-                    String.valueOf(mat.getVolume()).contains(pattern)
-            ){
-                lists.add(mat);
-            }
-        }
-
-        return lists;
-
-         */
     }
 
-    // Prendre une matière par son code
+    // Prendre une matière sachant son code
     public Matiere getCourseByCode(String code) throws SQLException {
         Matiere mat = new Matiere();
         String query = "SELECT * FROM matiere WHERE code = ?";
@@ -89,6 +72,7 @@ public class Matiere {
         return mat;
     }
 
+    // Enregistrer un matière
     public void store() throws SQLException {
         String query = "INSERT INTO matiere(code, designation, volume) VALUES(?, ?, ?)";
         PreparedStatement statement = Database.getConnection().prepareStatement(query);
@@ -98,6 +82,7 @@ public class Matiere {
         statement.executeUpdate();
     }
 
+    // Mettre à jour un matière
     public void update(String OldCode) throws SQLException {
         String query = "UPDATE matiere SET code = ?, designation = ?, volume = ? WHERE code = ?";
         PreparedStatement statement = Database.getConnection().prepareStatement(query);
@@ -108,6 +93,7 @@ public class Matiere {
         statement.executeUpdate();
     }
 
+    // Supprimer un matière
     public void destroy() throws SQLException {
         String query = "DELETE FROM matiere WHERE code = ?";
         PreparedStatement statement = Database.getConnection().prepareStatement(query);
@@ -115,6 +101,7 @@ public class Matiere {
         statement.executeUpdate();
     }
 
+    // ================ GETTES & SETTERS ================ //
 
     public String getCode() {
         return this.Code;

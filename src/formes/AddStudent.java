@@ -26,7 +26,7 @@ public class AddStudent extends JDialog {
         getRootPane().setDefaultButton(buttonOK);
 
         // Set the size and position of the dialog
-        setSize(300, 200);
+        setSize(500, 200);
         setTitle("Enregistrement d'un étudiant");
         setLocationRelativeTo(parent);
 

@@ -19,6 +19,7 @@ public class Note {
         this.Valeur = 0;
     }
 
+    // Prendre une note d'un étudiant
     public List<Note> getStudentNote() throws SQLException {
         List<Note> lists = new ArrayList<>();
         String query = "SELECT * FROM note WHERE code_etudiant = ?";
@@ -42,6 +43,7 @@ public class Note {
         return lists;
     }
 
+    // Prendre la moyenne d'un étudiant
     public float getStudentAverage() throws SQLException {
         float moyenne = 0;
         String query = "SELECT avg(valeur) AS moyenne FROM note WHERE code_etudiant = ?";
@@ -56,6 +58,7 @@ public class Note {
         return moyenne;
     }
 
+    // Enregistrer un note d'un étudiant
     public void store() throws SQLException {
         String query = "INSERT INTO note(code_matiere, code_etudiant, valeur) VALUES(?, ?, ?)";
         PreparedStatement statement = Database.getConnection().prepareStatement(query);
@@ -64,6 +67,8 @@ public class Note {
         statement.setFloat(3, this.Valeur);
         statement.executeUpdate();
     }
+
+    // ================ GETTES & SETTERS ================ //
 
     public int getId() {
         return this.Id;
